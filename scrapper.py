@@ -24,10 +24,10 @@ def get_articles(total_pages):
                     "topic": article.get("dossierLabel"),
                     "publishedFrom": article.get("publishedFrom"),
                     "majorUpdatedAt": article.get("majorUpdatedAt"),
-                    "readingtime": article.get("readingtime"),
+                    "readingTime": article.get("readingTime"),
                     "dossierLabel": article.get("dossierLabel"),
                     "url": base_url + article["slug"] + "-" + str(article["id"]),
-                    "redactedByTeamRedactionInfos": article.get("redactedByTeamRedactionInfos"),
+                    "redactedByTeamRedactionInfo": article.get("redactedByTeamRedactionInfo"),
                 }
                 all_articles_data.append(article_data)
         else:
