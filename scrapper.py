@@ -1,5 +1,6 @@
 import requests
 import json
+import time
 
 def get_articles(total_pages):
     all_articles_data = []
@@ -23,7 +24,10 @@ def get_articles(total_pages):
                     "topic": article.get("dossierLabel"),
                     "publishedFrom": article.get("publishedFrom"),
                     "majorUpdatedAt": article.get("majorUpdatedAt"),
-                    "url": base_url + article["slug"] + "-" + str(article["id"]),  
+                    "readingtime": article.get("readingtime"),
+                    "dossierLabel": article.get("dossierLabel"),
+                    "url": base_url + article["slug"] + "-" + str(article["id"]),
+                    "redactedByTeamRedactionInfos": article.get("redactedByTeamRedactionInfos"),
                 }
                 all_articles_data.append(article_data)
         else:
@@ -31,9 +35,14 @@ def get_articles(total_pages):
 
     return all_articles_data
 
+start_time = time.time()
+
 articles = get_articles(100)
+
+end_time = time.time()
 
 with open("articles.json", "w", encoding='utf-8') as f:
     json.dump(articles, f, ensure_ascii=False, indent=4)
 
-print(f"Fetched {len(articles)} articles.")
+execution_time = end_time - start_time
+print(f"Fetched {len(articles)} articles in {execution_time:.2f} seconds.")
