@@ -1,38 +1,44 @@
 import requests
 import json
 import time
+from concurrent.futures import ThreadPoolExecutor
+
+def fetch_page(i):
+    url_json = f"https://bff-service.rtbf.be/oaos/v1.5/pages/en-continu?_page={i}&_limit=100"
+    response = requests.get(url_json)
+    articles_data = []
+    
+    if response.status_code == 200:
+        page_json = response.text
+        articles = json.loads(page_json)["data"]["articles"]
+        for article in articles:
+            article_data = {
+                "type": article.get("type"),
+                "title": article.get("title"),
+                "summary": article.get("summary"),
+                "topic": article.get("dossierLabel"),
+                "publishedFrom": article.get("publishedFrom"),
+                "majorUpdatedAt": article.get("majorUpdatedAt"),
+                "readingTime": article.get("readingTime"),
+                "dossierLabel": article.get("dossierLabel"),
+                "url": "https://www.rtbf.be/article/" + article["slug"] + "-" + str(article["id"]),
+                "redactedByTeamRedactionInfo": article.get("redactedByTeamRedactionInfo"),
+            }
+            articles_data.append(article_data)
+    else:
+        print(f"Failed to fetch page {i}: {response.status_code}")
+    
+    return articles_data
 
 def get_articles(total_pages):
     all_articles_data = []
-    base_url = "https://www.rtbf.be/article/"
-
-    for i in range(1, total_pages + 1):
-        url_json = f"https://bff-service.rtbf.be/oaos/v1.5/pages/en-continu?_page={i}&_limit=100"
-        print(f"Fetching articles from {url_json}")
+    
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        results = executor.map(fetch_page, range(1, total_pages + 1))
         
-        response = requests.get(url_json)
-        
-        if response.status_code == 200:
-            page_json = response.text
-            articles = json.loads(page_json)["data"]["articles"]
-            
-            for article in articles:
-                article_data = {
-                    "type": article.get("type"),
-                    "title": article.get("title"),
-                    "summary": article.get("summary"),
-                    "topic": article.get("dossierLabel"),
-                    "publishedFrom": article.get("publishedFrom"),
-                    "majorUpdatedAt": article.get("majorUpdatedAt"),
-                    "readingTime": article.get("readingTime"),
-                    "dossierLabel": article.get("dossierLabel"),
-                    "url": base_url + article["slug"] + "-" + str(article["id"]),
-                    "redactedByTeamRedactionInfo": article.get("redactedByTeamRedactionInfo"),
-                }
-                all_articles_data.append(article_data)
-        else:
-            print(f"Failed to fetch page {i}: {response.status_code}")
-
+        for result in results:
+            all_articles_data.extend(result)
+    
     return all_articles_data
 
 start_time = time.time()
